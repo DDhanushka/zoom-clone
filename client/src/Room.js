@@ -1,11 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { Peer } from "peerjs";
+import { io } from "socket.io-client";
 
 const Room = () => {
+	const socket = io("http://localhost:3030");
 	const peer = new Peer("pick-an-id");
 	const myVid = useRef();
 	const [roomId, setRoomId] = useState("");
+	const [me, setMe] = useState("");
 
 	async function getRoomId() {
 		try {
@@ -22,10 +25,10 @@ const Room = () => {
 		navigator.mediaDevices
 			.getUserMedia({ video: true, audio: true })
 			.then((stream) => {
-				const call = peer.call("another-peers-id", stream);
-				call.on("stream", (remoteStream) => {
-					// Show stream in some <video> element.
-				});
+				// const call = peer.call("another-peers-id", stream);
+				// call.on("stream", (remoteStream) => {
+				// 	// Show stream in some <video> element.
+				// });
 				myVid.current.srcObject = stream;
 			})
 			.catch((err) => {
@@ -36,12 +39,19 @@ const Room = () => {
 	useEffect(() => {
 		getMedia();
 		getRoomId();
+		socket.on("me", (id) => setMe(id));
+		socket.emit("join-room", "hello bro");
+		socket.on("connect", () => {
+			console.log(socket.id); // x8WIv7-mJelg7on_ALbx
+		});
+
+		return () => socket.disconnect();
 	}, []);
 
 	return (
 		<div>
 			<h1>Client:room</h1>
-			<p>{roomId}</p>
+			<p>{me}</p>
 
 			<video playsInline ref={myVid} width="480" height="300" autoPlay muted />
 		</div>
