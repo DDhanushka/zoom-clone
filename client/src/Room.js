@@ -5,10 +5,17 @@ import { io } from "socket.io-client";
 
 const Room = () => {
 	const socket = io("http://localhost:3030");
-	const peer = new Peer("pick-an-id");
+	// const peer = new Peer(undefined, {
+	// 	path: "/peerjs",
+	// 	host: "/",
+	// 	port: "3030",
+	// });
+	const peer = new Peer();
+
 	const myVid = useRef();
 	const [roomId, setRoomId] = useState("");
 	const [me, setMe] = useState("");
+	const [peerId, setPeerId] = useState("");
 
 	async function getRoomId() {
 		try {
@@ -39,21 +46,25 @@ const Room = () => {
 	useEffect(() => {
 		getMedia();
 		getRoomId();
-
+		peer.on("open", (id) => {
+			// console.log(id);
+			setPeerId(id);
+		});
 	}, []);
 
 	useEffect(() => {
-		socket.emit("join-room", roomId);
+		socket.emit("join-room", roomId, peerId);
 		socket.on("me", (id) => setMe(id));
-		socket.on("user-connected", () => {
-			connectToNewUser();
+		socket.on("user-connected", (userId) => {
+			connectToNewUser(userId);
 		});
 
 		// return () => socket.disconnect();
-	}, [roomId]);
+	}, [peerId, roomId]);
 
-	const connectToNewUser = () => {
-		console.log("new user");
+	const connectToNewUser = (userId) => {
+		console.log(userId);
+		// console.log(`New user: ${userId}`);
 	};
 
 	return (
@@ -61,6 +72,7 @@ const Room = () => {
 			<h1>Client:room</h1>
 			<p>roomid: {roomId}</p>
 			<p>socketid: {me}</p>
+			<p>peer: {peerId}</p>
 
 			<video playsInline ref={myVid} width="480" height="300" autoPlay muted />
 		</div>

@@ -12,6 +12,11 @@ const io = require("socket.io")(server, {
 });
 app.use(cors());
 
+// const { ExpressPeerServer } = require("peerjs");
+// const peerServer = ExpressPeerServer(server, {
+// 	debug: true,
+// });
+
 app.get("/", (req, res) => {
 	res.redirect(`/${uuidv4()}`);
 });
@@ -25,13 +30,11 @@ io.on("connection", (socket) => {
 	// socket.join("room1");
 	// console.log(socket.rooms);
 
-	socket.on("join-room", (roomId) => {
-		console.log(roomId);
+	socket.on("join-room", (roomId, peerId) => {
+		console.log("peer", peerId);
 		socket.join(roomId);
-		socket.to(roomId).emit("user-connected");
+		socket.to(roomId).emit("user-connected", peerId);
 	});
-	console.log(socket.rooms);
-
 	socket.emit("me", socket.id);
 });
 
