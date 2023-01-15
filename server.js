@@ -18,13 +18,19 @@ app.get("/", (req, res) => {
 
 app.get("/:room", (req, res) => {
 	res.json({ roomId: req.params });
-	// res.render("room", { roomId: req.params.room });
 });
 
 io.on("connection", (socket) => {
-	socket.on("join-room", () => {
-		console.log("joined");
+	// console.log(socket.rooms); // Set { <socket.id> }
+	// socket.join("room1");
+	// console.log(socket.rooms);
+
+	socket.on("join-room", (roomId) => {
+		console.log(roomId);
+		socket.join(roomId);
+		socket.to(roomId).emit("user-connected");
 	});
+	console.log(socket.rooms);
 
 	socket.emit("me", socket.id);
 });

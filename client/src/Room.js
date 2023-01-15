@@ -14,7 +14,7 @@ const Room = () => {
 		try {
 			const response = await axios.get("http://localhost:3030");
 			if (response.status === 200) {
-				setRoomId(JSON.stringify(response.data));
+				setRoomId(response.data.roomId.room);
 			}
 		} catch (error) {
 			console.error(error);
@@ -39,19 +39,28 @@ const Room = () => {
 	useEffect(() => {
 		getMedia();
 		getRoomId();
+
+	}, []);
+
+	useEffect(() => {
+		socket.emit("join-room", roomId);
 		socket.on("me", (id) => setMe(id));
-		socket.emit("join-room", "hello bro");
-		socket.on("connect", () => {
-			console.log(socket.id); // x8WIv7-mJelg7on_ALbx
+		socket.on("user-connected", () => {
+			connectToNewUser();
 		});
 
-		return () => socket.disconnect();
-	}, []);
+		// return () => socket.disconnect();
+	}, [roomId]);
+
+	const connectToNewUser = () => {
+		console.log("new user");
+	};
 
 	return (
 		<div>
 			<h1>Client:room</h1>
-			<p>{me}</p>
+			<p>roomid: {roomId}</p>
+			<p>socketid: {me}</p>
 
 			<video playsInline ref={myVid} width="480" height="300" autoPlay muted />
 		</div>
