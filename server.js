@@ -36,6 +36,10 @@ io.on("connection", (socket) => {
 		socket.to(roomId).emit("user-connected", peerId);
 	});
 	socket.emit("me", socket.id);
+
+	socket.on("disconnect", () => {
+		console.log("disconnect");
+	});
 });
 
 server.listen(3030);

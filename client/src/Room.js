@@ -29,10 +29,6 @@ const Room = () => {
 		navigator.mediaDevices
 			.getUserMedia({ video: true, audio: true })
 			.then((stream) => {
-				// const call = peer.call("another-peers-id", stream);
-				// call.on("stream", (remoteStream) => {
-				// 	// Show stream in some <video> element.
-				// });
 				myVid.current.srcObject = stream;
 			})
 			.catch((err) => {
@@ -48,6 +44,10 @@ const Room = () => {
 		}
 	}
 
+	const connectToNewUser = (userId) => {
+		console.log(`New user: ${userId}`);
+	};
+
 	useEffect(() => {
 		getMedia();
 		if (roomUrl === undefined) {
@@ -61,9 +61,11 @@ const Room = () => {
 	}, []);
 
 	useEffect(() => {
-		socket.emit("join-room", roomId, peerId);
 		socket.on("me", (id) => setMe(id));
-	}, [peerId, roomId]);
+		peer.on("open", (id) => {
+			socket.emit("join-room", roomId, id);
+		});
+	}, [roomId]);
 
 	useEffect(() => {
 		socket.on("user-connected", (userId, arg) => {
@@ -71,14 +73,16 @@ const Room = () => {
 		});
 	});
 
-	const connectToNewUser = (userId) => {
-		console.log(`New user: ${userId}`);
-	};
-
 	return (
 		<div>
 			<h1>Client:room</h1>
-			<p>roomid: {roomId}</p>
+			<p>
+				roomid: <br />
+				{roomId}
+			</p>
+			<a href={`http://localhost:3000/${roomId}`} target="_blank">
+				Join link
+			</a>
 			<p>socketid: {me}</p>
 			<p>peer: {peerId}</p>
 
