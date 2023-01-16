@@ -43,9 +43,6 @@ const Room = () => {
 	async function joinRoom(url) {
 		try {
 			const response = await axios.get(`http://localhost:3030/${url}`);
-			// if (response.status === 200) {
-			// 	setRoomId(response.data.roomId.room);
-			// }
 		} catch (error) {
 			console.error(error);
 		}
@@ -59,7 +56,6 @@ const Room = () => {
 			joinRoom();
 		}
 		peer.on("open", (id) => {
-			// console.log(id);
 			setPeerId(id);
 		});
 	}, []);
@@ -67,11 +63,6 @@ const Room = () => {
 	useEffect(() => {
 		socket.emit("join-room", roomId, peerId);
 		socket.on("me", (id) => setMe(id));
-		// socket.on("user-connected", (userId) => {
-		// 	connectToNewUser(userId);
-		// });
-
-		// return () => socket.disconnect();
 	}, [peerId, roomId]);
 
 	useEffect(() => {
@@ -81,8 +72,7 @@ const Room = () => {
 	});
 
 	const connectToNewUser = (userId) => {
-		console.log("new user", userId);
-		// console.log(`New user: ${userId}`);
+		console.log(`New user: ${userId}`);
 	};
 
 	return (
