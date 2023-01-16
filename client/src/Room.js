@@ -2,15 +2,12 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { Peer } from "peerjs";
 import { io } from "socket.io-client";
+import { Routes, Route, useParams } from "react-router-dom";
 
 const Room = () => {
 	const socket = io("http://localhost:3030");
-	// const peer = new Peer(undefined, {
-	// 	path: "/peerjs",
-	// 	host: "/",
-	// 	port: "3030",
-	// });
 	const peer = new Peer();
+	let { roomUrl } = useParams();
 
 	const myVid = useRef();
 	const [roomId, setRoomId] = useState("");
@@ -19,7 +16,7 @@ const Room = () => {
 
 	async function getRoomId() {
 		try {
-			const response = await axios.get("http://localhost:3030");
+			const response = await axios.get("http://localhost:3030/");
 			if (response.status === 200) {
 				setRoomId(response.data.roomId.room);
 			}
@@ -43,9 +40,24 @@ const Room = () => {
 			});
 	};
 
+	async function joinRoom(url) {
+		try {
+			const response = await axios.get(`http://localhost:3030/${url}`);
+			// if (response.status === 200) {
+			// 	setRoomId(response.data.roomId.room);
+			// }
+		} catch (error) {
+			console.error(error);
+		}
+	}
+
 	useEffect(() => {
 		getMedia();
-		getRoomId();
+		if (roomUrl === undefined) {
+			getRoomId();
+		} else {
+			joinRoom();
+		}
 		peer.on("open", (id) => {
 			// console.log(id);
 			setPeerId(id);
@@ -55,15 +67,21 @@ const Room = () => {
 	useEffect(() => {
 		socket.emit("join-room", roomId, peerId);
 		socket.on("me", (id) => setMe(id));
-		socket.on("user-connected", (userId) => {
-			connectToNewUser(userId);
-		});
+		// socket.on("user-connected", (userId) => {
+		// 	connectToNewUser(userId);
+		// });
 
 		// return () => socket.disconnect();
 	}, [peerId, roomId]);
 
+	useEffect(() => {
+		socket.on("user-connected", (userId, arg) => {
+			connectToNewUser(userId, arg);
+		});
+	});
+
 	const connectToNewUser = (userId) => {
-		console.log(userId);
+		console.log("new user", userId);
 		// console.log(`New user: ${userId}`);
 	};
 
