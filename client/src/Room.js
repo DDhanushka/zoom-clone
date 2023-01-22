@@ -16,6 +16,7 @@ const Room = () => {
 	const [peerId, setPeerId] = useState("");
 	const [chat, setChat] = useState([]);
 	const [videos, setVideos] = useState([]);
+	const [myStream, setMyStream] = useState();
 
 	async function getRoomId() {
 		try {
@@ -33,6 +34,7 @@ const Room = () => {
 			.getUserMedia({ video: true, audio: true })
 			.then((stream) => {
 				// myVid.current.srcObject = stream;
+				setMyStream(stream);
 				setVideos((current) => [...current, { user: "me", str: stream }]);
 			})
 			.catch((err) => {
@@ -59,8 +61,30 @@ const Room = () => {
 		});
 		// let call = peer.call(userId, stream);
 		// call.on("stream", function (remoteStream) {
-		// 	setVideos()
+		// 	setVideos((current) => [
+		// 		...current,
+		// 		{ user: "other", str: remoteStream },
+		// 	]);
 		// });
+		var getUserMedia =
+			navigator.getUserMedia ||
+			navigator.webkitGetUserMedia ||
+			navigator.mozGetUserMedia;
+		getUserMedia(
+			{ video: true, audio: true },
+			function (stream) {
+				var call = peer.call(userId, stream);
+				call.on("stream", function (remoteStream) {
+					setVideos((current) => [
+						...current,
+						{ user: userId, str: remoteStream },
+					]);
+				});
+			},
+			function (err) {
+				console.log("Failed to get local stream", err);
+			}
+		);
 	};
 
 	useEffect(() => {
@@ -86,6 +110,29 @@ const Room = () => {
 				// Will print 'hi!'
 				console.log(data);
 			});
+		});
+
+		var getUserMedia =
+			navigator.getUserMedia ||
+			navigator.webkitGetUserMedia ||
+			navigator.mozGetUserMedia;
+		peer.on("call", function (call) {
+			getUserMedia(
+				{ video: true, audio: true },
+				function (stream) {
+					call.answer(stream); // Answer the call with an A/V stream.
+					call.on("stream", function (remoteStream) {
+						// Show stream in some video/canvas element.
+						setVideos((current) => [
+							...current,
+							{ user: "other", str: remoteStream },
+						]);
+					});
+				},
+				function (err) {
+					console.log("Failed to get local stream", err);
+				}
+			);
 		});
 	}, []);
 
@@ -131,15 +178,17 @@ const Room = () => {
 			/>
 
 			{videos.map((vid, index) => (
-				<ReactPlayer
-					key={index}
-					url={vid.str}
-					muted
-					playing
-					width={480}
-					height={300}
-					playsinline
-				/>
+				<div key={index}>
+					<ReactPlayer
+						url={vid.str}
+						muted
+						playing
+						width={480}
+						height={300}
+						playsinline
+					/>
+					<p>{vid.user}</p>
+				</div>
 			))}
 
 			{/* <video playsInline ref={myVid} width="480" height="300" autoPlay muted /> */}
