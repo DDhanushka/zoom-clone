@@ -13,7 +13,6 @@ const Room = () => {
 	const [roomId, setRoomId] = useState("");
 	const [me, setMe] = useState("");
 	const [peerId, setPeerId] = useState("");
-	const [msg, setMsg] = useState("");
 	const [chat, setChat] = useState([]);
 	const [videos, setVideos] = useState([]);
 
@@ -54,16 +53,9 @@ const Room = () => {
 		// on open will be launch when you successfully connect to PeerServer
 		conn.on("open", function () {
 			// here you have conn.id
-			conn.send("hi!");
+			conn.send("hi broooo!");
 		});
 	};
-
-	// const addVideoStream = (video, stream) => {
-	// 	video.srcObject = stream;
-	// 	video.addEventListner("loadedmetadata", () => {
-	// 		video.play();
-	// 	});
-	// };
 
 	useEffect(() => {
 		getMedia();
@@ -72,8 +64,20 @@ const Room = () => {
 		} else {
 			joinRoom();
 		}
+		socket.on("user-connected", (userId, arg) => {
+			connectToNewUser(userId, arg);
+		});
+		socket.on("createMessage", (msg, user) => {
+			setChat((current) => [...current, { text: msg, user }]);
+		});
 		peer.on("open", (id) => {
 			setPeerId(id);
+		});
+		peer.on("connection", function (conn) {
+			conn.on("data", function (data) {
+				// Will print 'hi!'
+				console.log(data);
+			});
 		});
 	}, []);
 
@@ -84,24 +88,6 @@ const Room = () => {
 		});
 	}, [roomId]);
 
-	useEffect(() => {
-		socket.on("user-connected", (userId, arg) => {
-			connectToNewUser(userId, arg);
-		});
-		socket.on("createMessage", (msg, user) => {
-			setChat((current) => [...current, { text: msg, user }]);
-			setMsg(msg);
-		});
-	});
-
-	useEffect(() => {
-		peer.on("connection", function (conn) {
-			conn.on("data", function (data) {
-				// Will print 'hi!'
-				console.log(data);
-			});
-		});
-	});
 	const handleKeyDown = (event) => {
 		if (event.key === "Enter") {
 			console.log("entered", event.target.value);
@@ -138,7 +124,6 @@ const Room = () => {
 			/>
 
 			<video playsInline ref={myVid} width="480" height="300" autoPlay muted />
-
 		</div>
 	);
 };
