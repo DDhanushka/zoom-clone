@@ -14,7 +14,7 @@ const Room = () => {
 	const [me, setMe] = useState("");
 	const [peerId, setPeerId] = useState("");
 	const [msg, setMsg] = useState("");
-	const [chat, setChat] = useState(["hi", "hello"]);
+	const [chat, setChat] = useState([]);
 
 	async function getRoomId() {
 		try {
@@ -86,8 +86,8 @@ const Room = () => {
 		socket.on("user-connected", (userId, arg) => {
 			connectToNewUser(userId, arg);
 		});
-		socket.on("createMessage", (msg) => {
-			setChat([...chat, "msg"]);
+		socket.on("createMessage", (msg, peer) => {
+			setChat((current) => [...current, { text: msg, user: "other", peer }]);
 			setMsg(msg);
 		});
 	});
@@ -103,7 +103,8 @@ const Room = () => {
 	const handleKeyDown = (event) => {
 		if (event.key === "Enter") {
 			console.log("entered", event.target.value);
-			socket.emit("message", event.target.value);
+			socket.emit("message", event.target.value, peerId);
+			// setChat((current) => [...current, { text: msg, user: "other" }]);
 		}
 	};
 	return (
@@ -118,12 +119,15 @@ const Room = () => {
 			</a>
 			<p>socketid: {me}</p>
 			<p>peer: {peerId}</p>
-			<p>msg: {msg}</p>
-			{/* <ul>
-				{chat.map((item) => (
-					<li>{item}</li>
+			<ul>
+				{chat.map((item, index) => (
+					<li key={index}>
+						{item.peer === peerId ? "(me): " : "(other): "} {item.text} {"<= "}
+						{item.peer}
+					</li>
 				))}
-			</ul> */}
+			</ul>
+
 			<input
 				id="chat_message"
 				type="text"

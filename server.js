@@ -38,9 +38,9 @@ io.on("connection", (socket) => {
 		// 	io.to(roomId).emit("createMessage", message);
 		// });
 	});
-	socket.on("message", (message) => {
+	socket.on("message", (message, peer) => {
 		console.log(message);
-		io.to(room).emit("createMessage", message);
+		io.to(room).emit("createMessage", message, peer);
 	});
 	socket.emit("me", socket.id);
 
