@@ -15,6 +15,7 @@ const Room = () => {
 	const [peerId, setPeerId] = useState("");
 	const [msg, setMsg] = useState("");
 	const [chat, setChat] = useState([]);
+	const [videos, setVideos] = useState([]);
 
 	async function getRoomId() {
 		try {
@@ -32,6 +33,7 @@ const Room = () => {
 			.getUserMedia({ video: true, audio: true })
 			.then((stream) => {
 				myVid.current.srcObject = stream;
+				setVideos((current) => [...current, { user: "me", stream }]);
 			})
 			.catch((err) => {
 				console.error("Failed to get local stream", err);
@@ -86,8 +88,8 @@ const Room = () => {
 		socket.on("user-connected", (userId, arg) => {
 			connectToNewUser(userId, arg);
 		});
-		socket.on("createMessage", (msg, peer) => {
-			setChat((current) => [...current, { text: msg, user: "other", peer }]);
+		socket.on("createMessage", (msg, user) => {
+			setChat((current) => [...current, { text: msg, user }]);
 			setMsg(msg);
 		});
 	});
@@ -103,7 +105,7 @@ const Room = () => {
 	const handleKeyDown = (event) => {
 		if (event.key === "Enter") {
 			console.log("entered", event.target.value);
-			socket.emit("message", event.target.value, peerId);
+			socket.emit("message", event.target.value, me);
 			// setChat((current) => [...current, { text: msg, user: "other" }]);
 		}
 	};
@@ -122,8 +124,8 @@ const Room = () => {
 			<ul>
 				{chat.map((item, index) => (
 					<li key={index}>
-						{item.peer === peerId ? "(me): " : "(other): "} {item.text} {"<= "}
-						{item.peer}
+						{item.user === me ? "(me): " : "(other): "} {item.text} {"<= "}
+						{item.user}
 					</li>
 				))}
 			</ul>
@@ -136,6 +138,7 @@ const Room = () => {
 			/>
 
 			<video playsInline ref={myVid} width="480" height="300" autoPlay muted />
+
 		</div>
 	);
 };

@@ -28,19 +28,19 @@ app.get("/:room", (req, res) => {
 let room = undefined;
 
 io.on("connection", (socket) => {
-	socket.on("join-room", (roomId, peerId) => {
+	socket.on("join-room", (roomId, peerId, stream) => {
 		room = roomId;
 		console.log("peer", peerId);
 		socket.join(roomId);
-		socket.to(roomId).emit("user-connected", peerId);
+		socket.to(roomId).emit("user-connected", peerId, stream);
 		// socket.on("message", (message) => {
 		// 	console.log(message);
 		// 	io.to(roomId).emit("createMessage", message);
 		// });
 	});
-	socket.on("message", (message, peer) => {
+	socket.on("message", (message, userId) => {
 		console.log(message);
-		io.to(room).emit("createMessage", message, peer);
+		io.to(room).emit("createMessage", message, userId);
 	});
 	socket.emit("me", socket.id);
 
