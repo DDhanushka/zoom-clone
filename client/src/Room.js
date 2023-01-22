@@ -3,6 +3,7 @@ import axios from "axios";
 import { Peer } from "peerjs";
 import { io } from "socket.io-client";
 import { Routes, Route, useParams } from "react-router-dom";
+import ReactPlayer from "react-player/lazy";
 
 const Room = () => {
 	const socket = io("http://localhost:3030");
@@ -31,8 +32,8 @@ const Room = () => {
 		navigator.mediaDevices
 			.getUserMedia({ video: true, audio: true })
 			.then((stream) => {
-				myVid.current.srcObject = stream;
-				setVideos((current) => [...current, { user: "me", stream }]);
+				// myVid.current.srcObject = stream;
+				setVideos((current) => [...current, { user: "me", str: stream }]);
 			})
 			.catch((err) => {
 				console.error("Failed to get local stream", err);
@@ -47,7 +48,8 @@ const Room = () => {
 		}
 	}
 	let conn = undefined;
-	const connectToNewUser = (userId) => {
+
+	const connectToNewUser = (userId, stream) => {
 		console.log(`New user: ${userId}`);
 		conn = peer.connect(userId);
 		// on open will be launch when you successfully connect to PeerServer
@@ -55,6 +57,10 @@ const Room = () => {
 			// here you have conn.id
 			conn.send("hi broooo!");
 		});
+		// let call = peer.call(userId, stream);
+		// call.on("stream", function (remoteStream) {
+		// 	setVideos()
+		// });
 	};
 
 	useEffect(() => {
@@ -64,12 +70,14 @@ const Room = () => {
 		} else {
 			joinRoom();
 		}
+
 		socket.on("user-connected", (userId, arg) => {
 			connectToNewUser(userId, arg);
 		});
 		socket.on("createMessage", (msg, user) => {
 			setChat((current) => [...current, { text: msg, user }]);
 		});
+
 		peer.on("open", (id) => {
 			setPeerId(id);
 		});
@@ -92,7 +100,6 @@ const Room = () => {
 		if (event.key === "Enter") {
 			console.log("entered", event.target.value);
 			socket.emit("message", event.target.value, me);
-			// setChat((current) => [...current, { text: msg, user: "other" }]);
 		}
 	};
 	return (
@@ -123,7 +130,19 @@ const Room = () => {
 				onKeyDown={handleKeyDown}
 			/>
 
-			<video playsInline ref={myVid} width="480" height="300" autoPlay muted />
+			{videos.map((vid, index) => (
+				<ReactPlayer
+					key={index}
+					url={vid.str}
+					muted
+					playing
+					width={480}
+					height={300}
+					playsinline
+				/>
+			))}
+
+			{/* <video playsInline ref={myVid} width="480" height="300" autoPlay muted /> */}
 		</div>
 	);
 };
