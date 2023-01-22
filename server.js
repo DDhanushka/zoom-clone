@@ -25,15 +25,22 @@ app.get("/:room", (req, res) => {
 	res.json({ roomId: req.params });
 });
 
-io.on("connection", (socket) => {
-	// console.log(socket.rooms); // Set { <socket.id> }
-	// socket.join("room1");
-	// console.log(socket.rooms);
+let room = undefined;
 
+io.on("connection", (socket) => {
 	socket.on("join-room", (roomId, peerId) => {
+		room = roomId;
 		console.log("peer", peerId);
 		socket.join(roomId);
 		socket.to(roomId).emit("user-connected", peerId);
+		// socket.on("message", (message) => {
+		// 	console.log(message);
+		// 	io.to(roomId).emit("createMessage", message);
+		// });
+	});
+	socket.on("message", (message) => {
+		console.log(message);
+		io.to(room).emit("createMessage", message);
 	});
 	socket.emit("me", socket.id);
 
