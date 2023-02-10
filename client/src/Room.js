@@ -17,6 +17,8 @@ const Room = () => {
 	const [chat, setChat] = useState([]);
 	const [videos, setVideos] = useState([]);
 	const [myStream, setMyStream] = useState();
+	const [callList, setCallList] = useState([]);
+	const [count, setCount] = useState(0);
 
 	async function getRoomId() {
 		try {
@@ -59,13 +61,6 @@ const Room = () => {
 			// here you have conn.id
 			conn.send("hi broooo!");
 		});
-		// let call = peer.call(userId, stream);
-		// call.on("stream", function (remoteStream) {
-		// 	setVideos((current) => [
-		// 		...current,
-		// 		{ user: "other", str: remoteStream },
-		// 	]);
-		// });
 		var getUserMedia =
 			navigator.getUserMedia ||
 			navigator.webkitGetUserMedia ||
@@ -73,12 +68,16 @@ const Room = () => {
 		getUserMedia(
 			{ video: true, audio: true },
 			function (stream) {
-				var call = peer.call(userId, stream);
+				var call = peer.call(userId, stream, { metadata: { userId: peer.id } });
+				setCount(count + 1);
+
 				call.on("stream", function (remoteStream) {
+					console.log(call.metadata.userId);
 					setVideos((current) => [
 						...current,
 						{ user: userId, str: remoteStream },
 					]);
+					setCallList((current) => [...current, call]);
 				});
 			},
 			function (err) {
@@ -123,6 +122,7 @@ const Room = () => {
 					call.answer(stream); // Answer the call with an A/V stream.
 					call.on("stream", function (remoteStream) {
 						// Show stream in some video/canvas element.
+						console.log(call.metadata.userId);
 						setVideos((current) => [
 							...current,
 							{ user: "other", str: remoteStream },
@@ -149,6 +149,7 @@ const Room = () => {
 			socket.emit("message", event.target.value, me);
 		}
 	};
+
 	return (
 		<div>
 			<h1>Client:room</h1>
